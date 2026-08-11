@@ -44,12 +44,29 @@ la anterior. Ver `docs/spec.md` Sección 7 para el detalle de cada fase.
   vibración que menciona la spec **no se implementó**: la placa no lo tiene
   confirmado como periférico on-board (ver `docs/hardware-notes.md`).
 - **mobile-app**: batería simulada en pantalla (no hay batería real en un
-  navegador) y un banner de alerta que aparece solo cuando el backend
-  empuja una — para verlo hace falta correr `backend/` de verdad y apuntar
-  mobile-app a él con `NEXT_PUBLIC_BACKEND_URL` (el modo autocontenido de
-  Vercel no tiene quien empuje alertas).
+  navegador) y un banner de alerta proactiva.
 
-Para probar el flujo de alerta completo sin hardware:
+### Probar la alerta — directo en la demo de Vercel, sin nada más
+
+`mobile-app/app/api/alerts/route.ts` es un endpoint serverless (corre en la
+misma app de Vercel, sin backend aparte) que chequea el precio de un activo
+vía CoinGecko; la app lo pollea sola cada 15s y muestra el banner al cruzar
+el umbral. Sólo hace falta cargar en Vercel (Settings → Environment
+Variables):
+
+```
+ALERT_ASSET_ID=bitcoin
+ALERT_ABOVE=1
+```
+
+(`ALERT_ABOVE=1` dispara casi al toque, porque cualquier cripto vale más de
+1 USD — es a propósito, para verlo sin esperar). Redeploy y listo.
+
+### Probar el flujo con el backend real (como lo vería el ESP32)
+
+Esto usa el WebSocket persistente de `backend/` en vez del polling
+client-side — hace falta correrlo aparte (Vercel serverless no sostiene un
+WebSocket persistente):
 
 ```bash
 # Terminal 1 — backend con polling activo
@@ -62,9 +79,6 @@ cd mobile-app
 echo "NEXT_PUBLIC_BACKEND_URL=http://localhost:8787" >> .env.local
 npm install && npm run dev
 ```
-
-Con `POLLING_ALERT_ABOVE=1` la alerta va a dispararse casi al toque (cualquier
-cripto vale más de 1 USD) — es a propósito, para ver el banner sin esperar.
 
 ## Cómo probar el proyecto hoy (sin hardware) — recomendado para empezar
 

@@ -50,42 +50,88 @@ interface AlertPayload {
   assetId: string;
   currency: string;
   price: number;
-  threshold: number;
+  threshold?: number;
 }
 
-// Conecta al canal de push del backend/ real (Fase 2) para mostrar alertas
-// proactivas sin que el usuario pregunte nada — sólo funciona si se apuntó
-// mobile-app a un backend corriendo de verdad vía NEXT_PUBLIC_BACKEND_URL;
-// el modo autocontenido (default en Vercel) no tiene quien empuje alertas.
-function useBackendAlerts() {
+const CLIENT_ALERT_POLL_MS = 15000;
+const ALERT_BANNER_MS = 6000;
+
+/**
+ * Muestra alertas proactivas de Fase 2 sin que el usuario pregunte nada, de
+ * dos formas mutuamente excluyentes según cómo esté configurada la app:
+ *
+ * - Con NEXT_PUBLIC_BACKEND_URL seteado: se conecta por WebSocket al
+ *   backend/ real (push de verdad, como lo vería el ESP32).
+ * - Sin esa variable (modo autocontenido, el default en Vercel): pollea
+ *   GET /api/alerts cada CLIENT_ALERT_POLL_MS y detecta el cruce de umbral
+ *   del lado del cliente — mismo resultado visual, sin necesitar un
+ *   backend con WebSocket persistente desplegado aparte.
+ */
+function useAlerts() {
   const [alert, setAlert] = useState<AlertPayload | null>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wasAbove = useRef(false);
+  const wasBelow = useRef(false);
+
+  function fireAlert(payload: AlertPayload) {
+    setAlert(payload);
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => setAlert(null), ALERT_BANNER_MS);
+  }
 
   useEffect(() => {
-    if (!BACKEND_URL) return;
-
-    const wsUrl = BACKEND_URL.replace(/^http/, "ws") + "/ws/device";
-    let socket: WebSocket;
-    try {
-      socket = new WebSocket(wsUrl);
-    } catch {
-      return;
+    if (BACKEND_URL) {
+      const wsUrl = BACKEND_URL.replace(/^http/, "ws") + "/ws/device";
+      let socket: WebSocket;
+      try {
+        socket = new WebSocket(wsUrl);
+      } catch {
+        return;
+      }
+      socket.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === "alert") fireAlert(msg.payload as AlertPayload);
+        } catch {
+          // payload no-JSON, ignorar
+        }
+      };
+      return () => socket.close();
     }
 
-    socket.onmessage = (event) => {
+    const id = setInterval(async () => {
       try {
-        const msg = JSON.parse(event.data);
-        if (msg.type === "alert") {
-          setAlert(msg.payload as AlertPayload);
-          if (hideTimer.current) clearTimeout(hideTimer.current);
-          hideTimer.current = setTimeout(() => setAlert(null), 6000);
+        const res = await fetch("/api/alerts");
+        const data = await res.json();
+        if (!data.configured || data.error) return;
+
+        const { assetId, price, currency, above, below } = data as {
+          assetId: string;
+          price: number;
+          currency: string;
+          above?: number;
+          below?: number;
+        };
+
+        if (above !== undefined) {
+          const crossed = price > above;
+          if (crossed && !wasAbove.current) {
+            fireAlert({ category: "price_above", assetId, price, currency, threshold: above });
+          }
+          wasAbove.current = crossed;
+        }
+        if (below !== undefined) {
+          const crossed = price < below;
+          if (crossed && !wasBelow.current) {
+            fireAlert({ category: "price_below", assetId, price, currency, threshold: below });
+          }
+          wasBelow.current = crossed;
         }
       } catch {
-        // payload no-JSON, ignorar
+        // sin red por este ciclo, se reintenta solo en el próximo poll
       }
-    };
-
-    return () => socket.close();
+    }, CLIENT_ALERT_POLL_MS);
+    return () => clearInterval(id);
   }, []);
 
   return alert;
@@ -100,7 +146,7 @@ function batteryEmoji(percent: number): string {
 export default function Home() {
   const now = useClock();
   const battery = useMockBattery();
-  const alert = useBackendAlerts();
+  const alert = useAlerts();
   const [processing, setProcessing] = useState(false);
   const [responseText, setResponseText] = useState(
     "Tocá el micrófono o escribí abajo para hablar con el agente."
