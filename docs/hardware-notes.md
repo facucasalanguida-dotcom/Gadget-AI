@@ -15,6 +15,9 @@ lugares.
 | Pinout GPIO completo (LCD, touch, I2S mic/speaker, LED RGB, botones, batería) | Ver `firmware/include/config.h` (placeholders) | Pendiente | Idem |
 | Conector de batería | JST 1.25mm (JST-SH), 2 o 4 pines | Parcialmente confirmado por spec — verificar cantidad de pines contra la unidad física | Datasheet / inspección física |
 | PSRAM/Flash | 8MB PSRAM / 16MB Flash | Asumido (variante recomendada por spec) | Confirmar SKU comprada |
+| Divisor resistivo de lectura de batería (ratio, pin ADC) | Pin 1 (ADC1_CH0), ratio 2:1 | Pendiente — `power::read_battery_voltage()` no es confiable hasta confirmar esto | Esquemático de Freenove |
+| Driver LED RGB on-board | 3 canales GPIO simples (PWM directo) | Pendiente — **podría ser en cambio un LED addressable WS2812 de un solo pin de datos**, que requiere una librería distinta (`FastLED`/`Adafruit_NeoPixel`) en vez de `digitalWrite` | Manual/repo oficial Freenove |
+| Motor de vibración | **No confirmado que exista en la placa** | La Sección 7 del spec (Fase 2) pide "vibración + LED RGB", pero la Sección 2 (hardware on-board) sólo lista LED RGB, no un motor de vibración — no se implementó en `firmware/` hasta confirmar que la unidad física lo tiene | Inspección física de la placa / manual |
 
 ## Cómo actualizar este archivo
 

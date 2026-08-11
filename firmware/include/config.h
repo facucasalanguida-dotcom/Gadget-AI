@@ -44,8 +44,12 @@
 // --- Botón físico de captura de voz (Fase 1, reemplazado por wake word en Fase 3) ---
 #define BUTTON_RECORD_PIN_TBD 0  // BOOT button como placeholder
 
-// --- LED RGB on-board — pin TBD ---
-#define LED_RGB_PIN_TBD 48
+// --- LED RGB on-board — pines TBD. Asumido como 3 canales GPIO simples
+// (PWM directo); podría ser en cambio un LED addressable (WS2812) de un solo
+// pin de datos — confirmar contra el manual antes de dar por buena esta forma. ---
+#define LED_RGB_R_PIN_TBD 47
+#define LED_RGB_G_PIN_TBD 21
+#define LED_RGB_B_PIN_TBD 14
 
 // --- Audio ---
 #define AUDIO_SAMPLE_RATE 16000
@@ -55,3 +59,16 @@
 // --- Pantalla lógica ---
 #define SCREEN_WIDTH 480
 #define SCREEN_HEIGHT 320
+
+// --- Batería (Fase 2) — pin ADC y ratio del divisor resistivo sin confirmar
+// contra el esquemático real; el % resultante es aproximado hasta entonces. ---
+#define BATTERY_ADC_PIN_TBD 1
+#define BATTERY_DIVIDER_RATIO_TBD 2.0f
+
+// --- Energía (Fase 2) ---
+// Segundos de inactividad (sin tocar pantalla ni botón) antes de entrar en
+// deep sleep.
+#define DEEP_SLEEP_TIMEOUT_S 120
+// Cada cuánto se despierta brevemente en deep sleep para poder recibir un
+// push del backend (trade-off consumo/latencia — sin ajustar todavía).
+#define DEEP_SLEEP_WAKE_INTERVAL_S 30

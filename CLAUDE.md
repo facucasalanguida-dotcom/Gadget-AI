@@ -42,7 +42,15 @@
 ## Estado de fases
 - **Fase 1 (base funcional: voz + pantalla táctil)**: implementada — backend con tool
   calling, firmware base LVGL + captura por botón, mobile-app simulador.
-- **Fase 2 (proactividad + energía)**: scaffolded, no implementada.
+  Tag: `fase-1-completa`.
+- **Fase 2 (proactividad + energía)**: implementada en código — backend con polling
+  configurable (`backend/src/polling/`) + push por WebSocket, firmware con batería/deep
+  sleep (`firmware/src/power/`) + LED de alerta, mobile-app con batería simulada y
+  banner de alerta (sólo si se conecta a un backend real vía `NEXT_PUBLIC_BACKEND_URL`).
+  **No validada en hardware real** (no hay placa ni PlatformIO en este entorno) — el
+  criterio de aceptación completo (sobrevive horas con batería mostrando el nivel
+  correctamente) queda pendiente de probar en la placa física. Motor de vibración NO
+  implementado: no está confirmado que la placa lo tenga (ver `docs/hardware-notes.md`).
 - **Fase 3 (wake word + offline + OTA)**: scaffolded, no implementada.
 - **Fase 4 (cámara, sensores, NFC, NEXO/MCP, app complementaria)**: scaffolded, no
   implementada.

@@ -38,4 +38,7 @@ void set_response_text(const char *text);
 // Dispara un toast/banner de alerta (usado desde Fase 2 en adelante).
 void show_alert_banner(const char *title, const char *body);
 
+// Actualiza el indicador de batería (Fase 2). percent en [0, 100].
+void set_battery(uint8_t percent);
+
 } // namespace ui

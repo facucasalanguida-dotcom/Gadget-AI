@@ -16,12 +16,55 @@ sim/         → notas de simulación (LVGL PC simulator, Wokwi)
 docs/        → spec completa + notas de hardware a confirmar
 ```
 
-## Estado: Fase 1 completa (voz + pantalla táctil básica)
+## Estado: Fase 1 y Fase 2 implementadas (voz + pantalla, proactividad + energía)
 
-Las Fases 2 a 4 están scaffoldeadas (carpetas + README con el alcance
+Fase 1 (tag `fase-1-completa`) y Fase 2 (alertas por polling + batería/deep
+sleep) están implementadas en código. Fase 2 **no está validada en hardware
+real** — no hay placa física ni PlatformIO en este entorno de desarrollo, así
+que "sobrevive horas con batería mostrando el nivel correctamente" (el
+criterio de aceptación completo) queda pendiente de probar en la placa.
+
+Las Fases 3 y 4 están scaffoldeadas (carpetas + README con el alcance
 previsto) pero **no implementadas todavía**, siguiendo la regla del propio
 `CLAUDE.md`: no adelantar una fase sin cerrar el criterio de aceptación de
 la anterior. Ver `docs/spec.md` Sección 7 para el detalle de cada fase.
+
+## Fase 2 — Alertas proactivas + batería
+
+- **Backend**: `backend/src/polling/` consulta una fuente configurable (por
+  default, precio de un activo vía CoinGecko, gratis y sin API key) y empuja
+  una alerta por WebSocket (`backend/src/api/push.ts`, ya existía desde
+  Fase 1) sólo al cruzar un umbral configurado — no en cada poll. Se activa
+  completando `POLLING_ASSET_ID` + `POLLING_ALERT_ABOVE`/`POLLING_ALERT_BELOW`
+  en `backend/.env`.
+- **Firmware**: `firmware/src/power/` lee el voltaje de batería (ADC, pin
+  TBD) y calcula un % aproximado; entra en deep sleep tras
+  `DEEP_SLEEP_TIMEOUT_S` segundos de inactividad. `main.cpp` muestra el %
+  en pantalla y parpadea el LED RGB al recibir una alerta push. El motor de
+  vibración que menciona la spec **no se implementó**: la placa no lo tiene
+  confirmado como periférico on-board (ver `docs/hardware-notes.md`).
+- **mobile-app**: batería simulada en pantalla (no hay batería real en un
+  navegador) y un banner de alerta que aparece solo cuando el backend
+  empuja una — para verlo hace falta correr `backend/` de verdad y apuntar
+  mobile-app a él con `NEXT_PUBLIC_BACKEND_URL` (el modo autocontenido de
+  Vercel no tiene quien empuje alertas).
+
+Para probar el flujo de alerta completo sin hardware:
+
+```bash
+# Terminal 1 — backend con polling activo
+cd backend
+cp .env.example .env   # completar GEMINI_API_KEY + POLLING_ASSET_ID=bitcoin + POLLING_ALERT_ABOVE=1
+npm install && npm run dev
+
+# Terminal 2 — mobile-app apuntando a ese backend
+cd mobile-app
+echo "NEXT_PUBLIC_BACKEND_URL=http://localhost:8787" >> .env.local
+npm install && npm run dev
+```
+
+Con `POLLING_ALERT_ABOVE=1` la alerta va a dispararse casi al toque (cualquier
+cripto vale más de 1 USD) — es a propósito, para ver el banner sin esperar.
 
 ## Cómo probar el proyecto hoy (sin hardware) — recomendado para empezar
 

@@ -10,6 +10,7 @@ lv_obj_t *metric_value_label = nullptr;
 lv_obj_t *processing_spinner = nullptr;
 lv_obj_t *response_label = nullptr;
 lv_obj_t *alert_banner = nullptr;
+lv_obj_t *battery_label = nullptr;
 ActionCardCallback card_callback = nullptr;
 
 void card_event_handler(lv_event_t *e) {
@@ -51,6 +52,11 @@ void init_home_screen(const ActionCardSpec *cards, size_t card_count,
     lv_obj_set_style_text_font(clock_label, &lv_font_montserrat_28, 0);
     lv_obj_align(clock_label, LV_ALIGN_TOP_LEFT, 12, 8);
     lv_label_set_text(clock_label, "--:--");
+
+    // Batería (Fase 2) — debajo del reloj
+    battery_label = lv_label_create(screen);
+    lv_obj_align_to(battery_label, clock_label, LV_ALIGN_OUT_BOTTOM_LEFT, 0, 4);
+    lv_label_set_text(battery_label, LV_SYMBOL_BATTERY_FULL " --%");
 
     // Métrica destacada (arriba-derecha)
     metric_label = lv_label_create(screen);
@@ -131,6 +137,23 @@ void show_alert_banner(const char *title, const char *body) {
     lv_label_set_text(label, buf);
     lv_obj_center(label);
     lv_obj_clear_flag(alert_banner, LV_OBJ_FLAG_HIDDEN);
+}
+
+void set_battery(uint8_t percent) {
+    if (!battery_label) return;
+    const char *symbol = LV_SYMBOL_BATTERY_EMPTY;
+    if (percent > 75) {
+        symbol = LV_SYMBOL_BATTERY_FULL;
+    } else if (percent > 50) {
+        symbol = LV_SYMBOL_BATTERY_3;
+    } else if (percent > 25) {
+        symbol = LV_SYMBOL_BATTERY_2;
+    } else if (percent > 10) {
+        symbol = LV_SYMBOL_BATTERY_1;
+    }
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%s %d%%", symbol, percent);
+    lv_label_set_text(battery_label, buf);
 }
 
 } // namespace ui

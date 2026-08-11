@@ -8,9 +8,14 @@ tener el hardware armado.
 
 Por defecto es **autocontenida**: llama directo a la API del motor de IA
 elegido desde su propia API route (`app/api/voice/route.ts`), sin depender
-de que `backend/` esté desplegado en otro lado. Si preferís que hable con
-el `backend/` real (por ejemplo para probar alertas push de Fase 2 en el
-futuro), seteá `NEXT_PUBLIC_BACKEND_URL`.
+de que `backend/` esté desplegado en otro lado.
+
+También muestra batería simulada (Fase 2 — no hay batería real en un
+navegador) y, si seteás `NEXT_PUBLIC_BACKEND_URL` apuntando a un `backend/`
+corriendo de verdad, un banner de alerta cuando el polling del backend
+detecta que se cruzó un umbral configurado (ver README raíz, sección
+"Fase 2"). Sin esa variable, el modo autocontenido no tiene quien empuje
+alertas — es esperable, no es un bug.
 
 ## Motor de IA: Gemini (gratis) por default, Anthropic opcional
 
