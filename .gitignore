@@ -1,0 +1,26 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Backend build output
+backend/dist/
+
+# Next.js
+mobile-app/.next/
+mobile-app/out/
+mobile-app/next-env.d.ts
+
+# Env files (nunca commitear secretos)
+.env
+.env.local
+.env.*.local
+backend/.env
+mobile-app/.env.local
+
+# PlatformIO
+firmware/.pio/
+firmware/.vscode/
+
+# OS / editores
+.DS_Store
+*.log
