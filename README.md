@@ -29,6 +29,8 @@ La forma más rápida de ver el agente funcionando es la **app móvil web**
 (`mobile-app/`), pensada exactamente para esto: validar voz + pantalla +
 respuestas del backend antes de tocar una placa física.
 
+**Demo desplegada:** https://gadget-ai-ivory.vercel.app
+
 ### Opción A — Deploy en Vercel (para probarlo desde el celular)
 
 1. Este repo ya está en GitHub. En [vercel.com/new](https://vercel.com/new)
