@@ -1,13 +1,21 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { executeTool, toolDefinitions } from "./tools.js";
+import { SYSTEM_PROMPT } from "../system_prompt.js";
+import { executeTool, toolSpecs } from "../tools.js";
+import type { ConversationResult } from "../types.js";
+
+// Proveedor de pago (requiere ANTHROPIC_API_KEY con crédito). Ver
+// providers/gemini.ts para el proveedor gratuito por defecto. Ambos
+// implementan la misma firma (ver orchestrator/index.ts).
 
 const MODEL = process.env.ANTHROPIC_MODEL ?? "claude-sonnet-5";
 
-const SYSTEM_PROMPT = `Sos el cerebro de un agente de IA portatil (dispositivo ESP32-S3
-con pantalla tactil de 3.5"). El dispositivo es un cliente ligero: vos hacés todo el
-razonamiento acá en el backend. Respondé siempre en español, corto y claro (el
-dispositivo tiene una pantalla chica y a veces lee la respuesta en voz alta) — máximo
-2-3 oraciones salvo que el usuario pida más detalle.`;
+function toAnthropicTools(): Anthropic.Tool[] {
+  return toolSpecs.map((spec) => ({
+    name: spec.name,
+    description: spec.description,
+    input_schema: spec.parameters,
+  }));
+}
 
 let client: Anthropic | null = null;
 function getClient(): Anthropic {
@@ -15,17 +23,13 @@ function getClient(): Anthropic {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       throw new Error(
-        "Falta ANTHROPIC_API_KEY (ver backend/.env.example)."
+        "Falta ANTHROPIC_API_KEY (ver backend/.env.example). Si no tenés una " +
+          "key paga de Anthropic, usá AI_PROVIDER=gemini (gratis) en su lugar."
       );
     }
     client = new Anthropic({ apiKey });
   }
   return client;
-}
-
-export interface ConversationResult {
-  responseText: string;
-  toolCalls: Array<{ name: string; input: unknown }>;
 }
 
 /**
@@ -40,6 +44,7 @@ export async function runConversationTurn(
   maxToolIterations = 4
 ): Promise<ConversationResult> {
   const anthropic = getClient();
+  const tools = toAnthropicTools();
   const toolCalls: ConversationResult["toolCalls"] = [];
 
   const messages: Anthropic.MessageParam[] = [
@@ -51,7 +56,7 @@ export async function runConversationTurn(
       model: MODEL,
       max_tokens: 1024,
       system: SYSTEM_PROMPT,
-      tools: toolDefinitions,
+      tools,
       messages,
     });
 

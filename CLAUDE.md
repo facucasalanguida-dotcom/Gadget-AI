@@ -23,6 +23,13 @@
 - `sim/` — configuración del simulador de PC de LVGL y notas de Wokwi.
 - `docs/` — spec completa, notas de hardware confirmadas/pendientes.
 
+## Motor de IA
+- `AI_PROVIDER` (`backend/` y `mobile-app/`) elige el motor de tool calling:
+  `gemini` (default, gratis, sin tarjeta) o `anthropic` (de pago). Misma
+  interfaz en ambos — ver `backend/src/orchestrator/providers/` y
+  `mobile-app/lib/providers/`. No hardcodear un proveedor específico fuera
+  de esa carpeta.
+
 ## Comandos frecuentes
 - Compilar firmware: `pio run -e esp32-s3-devkit`
 - Flashear: `pio run -e esp32-s3-devkit -t upload`

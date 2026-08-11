@@ -1,5 +1,5 @@
 import express, { type Request, type Response } from "express";
-import { runConversationTurn } from "../orchestrator/claude.js";
+import { runConversationTurn } from "../orchestrator/index.js";
 import { transcribePcm } from "./transcribe.js";
 import type { DevicePushHub } from "./push.js";
 

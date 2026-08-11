@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { runConversationTurn } from "@/lib/claude";
+import { runConversationTurn } from "@/lib/ai";
 
 export const runtime = "nodejs";
 

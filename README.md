@@ -33,8 +33,9 @@ respuestas del backend antes de tocar una placa física.
 
 1. Este repo ya está en GitHub. En [vercel.com/new](https://vercel.com/new)
    importalo, con **Root Directory = `mobile-app`**.
-2. Agregá la variable de entorno `ANTHROPIC_API_KEY` (tu API key de
-   [console.anthropic.com](https://console.anthropic.com/)) en Vercel.
+2. Agregá la variable de entorno `GEMINI_API_KEY` en Vercel — es **gratis,
+   sin tarjeta de crédito**, conseguila en
+   [aistudio.google.com/apikey](https://aistudio.google.com/apikey).
 3. Deploy. Abrí la URL desde el celular (Chrome/Android para que ande el
    micrófono; en iOS/Safari queda el campo de texto como fallback).
 
@@ -44,19 +45,32 @@ Detalle completo en [`mobile-app/README.md`](mobile-app/README.md).
 
 ```bash
 cd mobile-app
-cp .env.example .env.local   # completar ANTHROPIC_API_KEY
+cp .env.example .env.local   # completar GEMINI_API_KEY (gratis, sin tarjeta)
 npm install
 npm run dev
 # abrir http://localhost:3000
 ```
 
+## Motor de IA: Gemini (gratis) por default, Anthropic opcional
+
+Tanto `backend/` como `mobile-app/` orquestan tool calling contra un motor de
+IA elegido por la variable `AI_PROVIDER`:
+
+- **`gemini`** (default) — [Google Gemini API](https://aistudio.google.com/apikey),
+  gratis y sin tarjeta de crédito. Es el que conviene para probar el proyecto.
+- **`anthropic`** — API de pago de Anthropic (`ANTHROPIC_API_KEY`), si ya la
+  usás en otros productos y preferís mantener todo con el mismo proveedor.
+
+Ver `backend/src/orchestrator/` y `mobile-app/lib/` (`providers/gemini.ts`,
+`providers/anthropic.ts`) — misma interfaz, ambos con tool calling real.
+
 ## Backend real (el que eventualmente habla con el ESP32)
 
 ```bash
 cd backend
-cp .env.example .env   # completar ANTHROPIC_API_KEY
+cp .env.example .env   # completar GEMINI_API_KEY (gratis, sin tarjeta)
 npm install
-npm test    # corre los tests del orquestador (tool calling) con Claude mockeado
+npm test    # corre los tests del orquestador (tool calling) con los proveedores mockeados
 npm run dev # levanta en http://localhost:8787
 ```
 

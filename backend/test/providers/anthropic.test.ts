@@ -10,18 +10,21 @@ vi.mock("@anthropic-ai/sdk", () => {
   };
 });
 
-describe("runConversationTurn", () => {
+describe("providers/anthropic runConversationTurn", () => {
   beforeEach(() => {
+    vi.resetModules();
     createMock.mockReset();
     process.env.ANTHROPIC_API_KEY = "test-key";
   });
 
-  it("devuelve el texto final cuando Claude no pide tools", async () => {
+  it("devuelve el texto final cuando el modelo no pide tools", async () => {
     createMock.mockResolvedValueOnce({
       content: [{ type: "text", text: "Hola, todo bien." }],
     });
 
-    const { runConversationTurn } = await import("../src/orchestrator/claude.js");
+    const { runConversationTurn } = await import(
+      "../../src/orchestrator/providers/anthropic.js"
+    );
     const result = await runConversationTurn("hola");
 
     expect(result.responseText).toBe("Hola, todo bien.");
@@ -45,7 +48,9 @@ describe("runConversationTurn", () => {
         content: [{ type: "text", text: "Son las 10 de la mañana." }],
       });
 
-    const { runConversationTurn } = await import("../src/orchestrator/claude.js");
+    const { runConversationTurn } = await import(
+      "../../src/orchestrator/providers/anthropic.js"
+    );
     const result = await runConversationTurn("¿qué hora es?");
 
     expect(result.responseText).toBe("Son las 10 de la mañana.");
@@ -60,10 +65,20 @@ describe("runConversationTurn", () => {
       ],
     });
 
-    const { runConversationTurn } = await import("../src/orchestrator/claude.js");
+    const { runConversationTurn } = await import(
+      "../../src/orchestrator/providers/anthropic.js"
+    );
     const result = await runConversationTurn("loop infinito", 2);
 
     expect(createMock).toHaveBeenCalledTimes(2);
     expect(result.responseText).toMatch(/No pude terminar/);
+  });
+
+  it("tira un error claro si falta ANTHROPIC_API_KEY", async () => {
+    delete process.env.ANTHROPIC_API_KEY;
+    const { runConversationTurn } = await import(
+      "../../src/orchestrator/providers/anthropic.js"
+    );
+    await expect(runConversationTurn("hola")).rejects.toThrow(/ANTHROPIC_API_KEY/);
   });
 });
